@@ -55,7 +55,7 @@ async function run() {
     /*
      * get : All get collection
      */
-
+    // get all products
     app.get("/products", async (req, res) => {
       const query = {};
       const cursor = productsCollection.find(query);
@@ -63,7 +63,27 @@ async function run() {
       res.send(products);
     });
 
-    console.log("connected");
+    /* Get users Products */
+    app.get("/users-ordered-products/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await orderedCollection.findOne({ email: email });
+    });
+
+    /* Get all users */
+    app.get("/users", verifyJWT, async (req, res) => {
+      const users = await userCollection.find().toArray();
+      res.send(users);
+    });
+
+    /* get User Role: Admin */
+    app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email: email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
+    });
+
+    console.log("database connected");
   } finally {
   }
 }
