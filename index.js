@@ -43,13 +43,20 @@ async function run() {
   try {
     await client.connect();
 
+    // all products
     const productsCollection = client
       .db("sonikon_global")
       .collection("allProducts");
+    // users all products
     const orderedCollection = client
       .db("sonikon_global")
       .collection("orderedProducts");
+    // all users
     const userCollection = client.db("sonikon_global").collection("users");
+    const userReviewCollection = client
+      .db("sonikon_global")
+      .collection("usersReview");
+    // all admin
     const adminCollection = client.db("sonikon_global").collection("admin");
 
     /*
@@ -81,6 +88,11 @@ async function run() {
 
     /* Get all users */
     app.get("/users", verifyJWT, async (req, res) => {
+      const users = await userCollection.find().toArray();
+      res.send(users);
+    });
+    /* Get all users */
+    app.get("/users-review", verifyJWT, async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
@@ -137,6 +149,15 @@ async function run() {
       );
 
       return res.send({ success: true, result });
+    });
+
+    /* Get all review*/
+    app.post("/users-review/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const review = req.body;
+      console.log(review);
+      const result = await userReviewCollection.insertOne(review);
+      res.send(result);
     });
 
     console.log("database connected");
