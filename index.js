@@ -106,6 +106,20 @@ async function run() {
       res.send({ accessToken });
     });
 
+    // users ordered porducts
+    app.post("/users-ordered-products", async (req, res) => {
+      const order = req.body;
+      const query = {
+        partsName: order.name,
+      };
+      const exist = await orderedCollection.findOne(query);
+      if (exist) {
+        return res.send({ success: false, order: exist });
+      }
+      const result = await orderedCollection.insertOne(order);
+      return res.send({ success: true, result });
+    });
+
     console.log("database connected");
   } finally {
   }
