@@ -92,6 +92,20 @@ async function run() {
       res.send({ admin: isAdmin });
     });
 
+    /*
+     * Post : All Post collection
+     */
+
+    // send token to the user
+    app.post("/signin", async (req, res) => {
+      const user = req.body;
+      const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "30d",
+      });
+
+      res.send({ accessToken });
+    });
+
     console.log("database connected");
   } finally {
   }
