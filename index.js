@@ -110,19 +110,29 @@ async function run() {
     app.post("/users-ordered-products", async (req, res) => {
       const order = req.body;
       const id = req.body.productDetails[0].productId;
+      const objId = { _id: ObjectId(id) };
       const email = req.body.userEmail;
       const filter = { userEmail: email };
-      const filterid = { productDetails: { $elemMatch: { productId: id } } };
-      const emailExist = await orderedCollection.findOne(filterid);
-      if (emailExist) {
-        console.log("Email Found");
-      }
+      const emailExist = await orderedCollection.findOne(filter);
 
-      // if (exist) {
-      //   console.log(exist);
-      //   return res.send({ order: exist });
-      // }
-      // const result = await orderedCollection.insertOne(order);
+      // product detail
+      const newproduct = req.body.productDetails[0];
+
+      // find id from the existing object inside array of object
+      const filterId = { productDetails: { $elemMatch: { productId: id } } };
+      // const idExist = await orderedCollection.findOne(filterId);
+
+      if (emailExist) {
+        /* if (idExist) {
+          const result = await orderedCollection.insertOne(order);
+        } */
+        const result = await orderedCollection.updateOne(filter, {
+          $push: { productDetails: newproduct },
+        });
+        return res.send({ success: true, result });
+      }
+      const result = await orderedCollection.insertOne(order);
+
       // return res.send({ success: true, result });
       return res.send({ success: true });
     });
