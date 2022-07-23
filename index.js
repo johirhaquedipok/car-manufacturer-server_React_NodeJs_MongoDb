@@ -109,15 +109,22 @@ async function run() {
     // users ordered porducts
     app.post("/users-ordered-products", async (req, res) => {
       const order = req.body;
-      const query = {
-        partsName: order.name,
-      };
-      const exist = await orderedCollection.findOne(query);
-      if (exist) {
-        return res.send({ success: false, order: exist });
+      const id = req.body.productDetails[0].productId;
+      const email = req.body.userEmail;
+      const filter = { userEmail: email };
+      const filterid = { productDetails: { $elemMatch: { productId: id } } };
+      const emailExist = await orderedCollection.findOne(filterid);
+      if (emailExist) {
+        console.log("Email Found");
       }
-      const result = await orderedCollection.insertOne(order);
-      return res.send({ success: true, result });
+
+      // if (exist) {
+      //   console.log(exist);
+      //   return res.send({ order: exist });
+      // }
+      // const result = await orderedCollection.insertOne(order);
+      // return res.send({ success: true, result });
+      return res.send({ success: true });
     });
 
     console.log("database connected");
