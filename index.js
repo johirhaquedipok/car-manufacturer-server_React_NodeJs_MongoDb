@@ -110,22 +110,13 @@ async function run() {
     app.post("/users-ordered-products", async (req, res) => {
       const order = req.body;
       const id = req.body.productDetails[0].productId;
-      const objId = { _id: ObjectId(id) };
       const email = req.body.userEmail;
       const filter = { userEmail: email };
       const emailExist = await orderedCollection.findOne(filter);
 
-      // product detail
-      const newproduct = req.body.productDetails[0];
-
-      // find id from the existing object inside array of object
-      const filterId = { productDetails: { $elemMatch: { productId: id } } };
-      // const idExist = await orderedCollection.findOne(filterId);
-
+      // insert data to users db
       if (emailExist) {
-        /* if (idExist) {
-          const result = await orderedCollection.insertOne(order);
-        } */
+        const newproduct = req.body.productDetails[0];
         const result = await orderedCollection.updateOne(filter, {
           $push: { productDetails: newproduct },
         });
@@ -133,8 +124,18 @@ async function run() {
       }
       const result = await orderedCollection.insertOne(order);
 
-      // return res.send({ success: true, result });
-      return res.send({ success: true });
+      // update availabe products qty
+      const query = { _id: ObjectId(id) };
+      const product = await productsCollection.findOne(query);
+      const orderedQty = req.body.productDetails[0].orderedQty;
+      const newAvailableQty = product.availableQty - orderedQty;
+      await productsCollection.updateOne(
+        query,
+        { $set: { availableQty: newAvailableQty } },
+        { upsert: true }
+      );
+
+      return res.send({ success: true, result });
     });
 
     console.log("database connected");
