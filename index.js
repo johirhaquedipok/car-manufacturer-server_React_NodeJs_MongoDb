@@ -73,9 +73,10 @@ async function run() {
     });
 
     /* Get users Products */
-    app.get("/users-ordered-products/:email", async (req, res) => {
+    app.get("/users-ordered-products/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
-      const user = await orderedCollection.findOne({ email: email });
+      const order = await orderedCollection.findOne({ userEmail: email });
+      res.send(order);
     });
 
     /* Get all users */
