@@ -29,6 +29,20 @@ function verifyJWT(req, res, next) {
   });
 }
 
+/* verify Admin */
+const verifyAdmin = async (req, res, next) => {
+  const requester = req.decoded.email;
+
+  const requesterAccount = await userCollection.findOne({
+    userEmail: requester,
+  });
+  if (requesterAccount.role === "admin") {
+    next();
+  } else {
+    res.status(403).send({ message: "forbidden" });
+  }
+};
+
 // mongo db connection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.amtbqis.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -52,7 +66,9 @@ async function run() {
       .db("sonikon_global")
       .collection("orderedProducts");
     // all users
-    const userCollection = client.db("sonikon_global").collection("users");
+    const userCollection = client
+      .db("sonikon_global")
+      .collection("userCollection");
     // user review
     const userReviewCollection = client
       .db("sonikon_global")
@@ -61,8 +77,6 @@ async function run() {
     const userProfileCollection = client
       .db("sonikon_global")
       .collection("usersProfile");
-    // all admin
-    const adminCollection = client.db("sonikon_global").collection("admin");
 
     /*
      * get : All get collection
@@ -114,7 +128,8 @@ async function run() {
     /* get User Role: Admin */
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
-      const user = await userCollection.findOne({ email: email });
+      const query = { userEmail: email };
+      const user = await userCollection.findOne(query);
       const isAdmin = user.role === "admin";
       res.send({ admin: isAdmin });
     });
@@ -173,13 +188,28 @@ async function run() {
       res.send(result);
     });
 
-    /* Get users profile*/
-    app.post("/users-profile/:email", verifyJWT, async (req, res) => {
+    /* update or post users profile*/
+    app.put("/users-profile/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const data = req.body;
-      const query = { email };
+      const query = { userEmail: email };
+      /* const findProfile = await userProfileCollection.findOne(query);
+      if (findProfile) {
+        const profile = await userProfileCollection.updateOne(data);
+        res.send(profile);
+      } else {
+      } */
+
       const profile = await userProfileCollection.insertOne(data);
       res.send(profile);
+    });
+
+    /* post a user*/
+    app.post("/users-review/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const result = await userCollection.insertOne(user);
+      res.send(result);
     });
 
     console.log("database connected");

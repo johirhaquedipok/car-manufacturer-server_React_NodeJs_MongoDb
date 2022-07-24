@@ -1,16 +1,3 @@
-/* verify Admin */
-const verifyAdmin = async (req, res, next) => {
-  const requester = req.decoded.email;
-
-  const requesterAccount = await userCollection.findOne({
-    email: requester,
-  });
-  if (requesterAccount.role === "admin") {
-    next();
-  } else {
-    res.status(403).send({ message: "forbidden" });
-  }
-};
 /* 
     * API Naming Convention
     *app.get (/booking) --> get all bookings in this collection. or get more than one or by filter  
@@ -98,7 +85,9 @@ app.get("/user", verifyJWT, async (req, res) => {
 /* get User Role: Admin */
 app.get("/admin/:email", async (req, res) => {
   const email = req.params.email;
-  const user = await userCollection.findOne({ email: email });
+
+  const user = await userCollection.findOne({ userEmail: email });
+  console.log(user);
   const isAdmin = user.role === "admin";
   res.send({ admin: isAdmin });
 });
