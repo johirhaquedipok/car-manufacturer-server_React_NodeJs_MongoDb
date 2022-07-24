@@ -53,6 +53,7 @@ async function run() {
       .collection("orderedProducts");
     // all users
     const userCollection = client.db("sonikon_global").collection("users");
+    // user review
     const userReviewCollection = client
       .db("sonikon_global")
       .collection("usersReview");
@@ -91,10 +92,10 @@ async function run() {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
-    /* Get all users */
+    /* Get all users review */
     app.get("/users-review", verifyJWT, async (req, res) => {
-      const users = await userCollection.find().toArray();
-      res.send(users);
+      const reviews = await userReviewCollection.find().toArray();
+      res.send(reviews);
     });
 
     /* get User Role: Admin */
