@@ -57,6 +57,10 @@ async function run() {
     const userReviewCollection = client
       .db("sonikon_global")
       .collection("usersReview");
+    // user profile
+    const userProfileCollection = client
+      .db("sonikon_global")
+      .collection("usersProfile");
     // all admin
     const adminCollection = client.db("sonikon_global").collection("admin");
 
@@ -92,10 +96,19 @@ async function run() {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
+
     /* Get all users review */
     app.get("/users-review", verifyJWT, async (req, res) => {
       const reviews = await userReviewCollection.find().toArray();
       res.send(reviews);
+    });
+
+    /* Get users profile*/
+    app.get("/users-profile/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const profile = await userProfileCollection.find(query).toArray();
+      res.send(profile);
     });
 
     /* get User Role: Admin */
@@ -121,7 +134,7 @@ async function run() {
     });
 
     // users ordered porducts
-    app.post("/users-ordered-products", async (req, res) => {
+    app.post("/users-ordered-products", verifyJWT, async (req, res) => {
       const order = req.body;
       const id = req.body.productDetails[0].productId;
       const email = req.body.userEmail;
@@ -152,13 +165,20 @@ async function run() {
       return res.send({ success: true, result });
     });
 
-    /* Get all review*/
+    /* post all review*/
     app.post("/users-review/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const review = req.body;
-      console.log(review);
       const result = await userReviewCollection.insertOne(review);
       res.send(result);
+    });
+
+    /* Get users profile*/
+    app.post("/users-profile/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const profile = await userProfileCollection.find(query).toArray();
+      res.send(profile);
     });
 
     console.log("database connected");
