@@ -4,7 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
-
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 // mongodb
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
@@ -64,6 +64,19 @@ async function run() {
       .db("sonikon_global")
       .collection("usersProfile");
 
+    // payment
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = price * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({ clientSecret: paymentIntent.client_secret });
+    });
+
     /* verify Admin */
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
@@ -93,6 +106,14 @@ async function run() {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const product = await productsCollection.findOne(query);
+      res.send(product);
+    });
+
+    // get all products
+    app.get("/ordered-products-payment/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const product = await orderedCollection.findOne(query);
       res.send(product);
     });
 
