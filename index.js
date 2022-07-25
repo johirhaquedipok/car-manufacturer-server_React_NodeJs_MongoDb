@@ -99,7 +99,9 @@ async function run() {
     /* Get users Products */
     app.get("/users-ordered-products/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
-      const order = await orderedCollection.findOne({ userEmail: email });
+      const order = await orderedCollection
+        .find({ userEmail: email })
+        .toArray();
       res.send(order);
     });
 
