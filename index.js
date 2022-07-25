@@ -225,5 +225,5 @@ app.get("/", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Sonikon App listening on port ${port}`);
+  console.log(`Doctors App listening on port ${port}`);
 });
