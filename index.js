@@ -222,6 +222,14 @@ async function run() {
       res.send(result);
     });
 
+    // post all products
+    app.post("/add-products", verifyJWT, verifyAdmin, async (req, res) => {
+      const product = req.body;
+      console.log(product);
+      /* const result= productsCollection.insertOne(product);
+      res.send(result); */
+    });
+
     console.log("database connected");
   } finally {
   }
