@@ -123,7 +123,7 @@ async function run() {
       const query = { userEmail: email };
       const user = await userCollection.findOne(query);
       const isAdmin = user.role === "admin";
-      if (isAdmin) res.send({ admin: isAdmin });
+      res.send({ admin: isAdmin });
     });
 
     /* Get all users ordred Products */
@@ -215,7 +215,7 @@ async function run() {
     });
 
     /* post a user*/
-    app.post("/users-review/:email", verifyJWT, async (req, res) => {
+    app.post("/users-collection/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const user = req.body;
       const result = await userCollection.insertOne(user);
