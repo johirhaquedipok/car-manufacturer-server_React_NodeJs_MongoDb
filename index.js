@@ -29,20 +29,6 @@ function verifyJWT(req, res, next) {
   });
 }
 
-/* verify Admin */
-const verifyAdmin = async (req, res, next) => {
-  const requester = req.decoded.email;
-
-  const requesterAccount = await userCollection.findOne({
-    userEmail: requester,
-  });
-  if (requesterAccount.role === "admin") {
-    next();
-  } else {
-    res.status(403).send({ message: "forbidden" });
-  }
-};
-
 // mongo db connection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.amtbqis.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -78,14 +64,27 @@ async function run() {
       .db("sonikon_global")
       .collection("usersProfile");
 
+    /* verify Admin */
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded.email;
+
+      const requesterAccount = await userCollection.findOne({
+        userEmail: requester,
+      });
+      if (requesterAccount.role === "admin") {
+        next();
+      } else {
+        res.status(403).send({ message: "forbidden" });
+      }
+    };
+
     /*
      * get : All get collection
      */
     // get all products
     app.get("/products", async (req, res) => {
       const query = {};
-      const cursor = productsCollection.find(query);
-      const products = await cursor.toArray();
+      const products = await productsCollection.find(query).toArray();
       res.send(products);
     });
 
@@ -94,7 +93,6 @@ async function run() {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const product = await productsCollection.findOne(query);
-
       res.send(product);
     });
 
@@ -103,12 +101,6 @@ async function run() {
       const email = req.params.email;
       const order = await orderedCollection.findOne({ userEmail: email });
       res.send(order);
-    });
-
-    /* Get all users */
-    app.get("/users", verifyJWT, async (req, res) => {
-      const users = await userCollection.find().toArray();
-      res.send(users);
     });
 
     /* Get all users review */
@@ -131,9 +123,20 @@ async function run() {
       const query = { userEmail: email };
       const user = await userCollection.findOne(query);
       const isAdmin = user.role === "admin";
-      res.send({ admin: isAdmin });
+      if (isAdmin) res.send({ admin: isAdmin });
     });
 
+    /* Get all users ordred Products */
+    app.get(
+      "/all-users-ordered-products",
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const query = {};
+        const result = await orderedCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
     /*
      * Post : All Post collection
      */
@@ -146,6 +149,13 @@ async function run() {
       });
 
       res.send({ accessToken });
+    });
+
+    /* post a new product*/
+    app.post("/add-products", verifyJWT, verifyAdmin, async (req, res) => {
+      const product = req.body;
+      const result = await productsCollection.insertOne(product);
+      res.send(result);
     });
 
     // users ordered porducts
