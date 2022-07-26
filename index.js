@@ -66,15 +66,17 @@ async function run() {
 
     // payment
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
-      const { price } = req.body;
-      const amount = price * 100;
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount,
-        currency: "usd",
-        payment_method_types: ["card"],
-      });
+      const { orderedQty } = req.body;
+      if (orderedQty) {
+        const amount = parseInt(orderedQty) * 100;
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount,
+          currency: "USD",
+          payment_method_types: ["card"],
+        });
 
-      res.send({ clientSecret: paymentIntent.client_secret });
+        res.send({ clientSecret: paymentIntent.client_secret });
+      }
     });
 
     /* verify Admin */
@@ -84,7 +86,7 @@ async function run() {
       const requesterAccount = await userCollection.findOne({
         userEmail: requester,
       });
-      if (requesterAccount.role === "admin") {
+      if (requesterAccount?.role === "admin") {
         next();
       } else {
         res.status(403).send({ message: "forbidden" });
@@ -143,10 +145,18 @@ async function run() {
     /* get User Role: Admin */
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
-      const query = { userEmail: email };
-      const user = await userCollection.findOne(query);
-      const isAdmin = user.role === "admin";
-      res.send({ admin: isAdmin });
+      const user = await userCollection.findOne({ userEmail: email });
+
+      const isAdmin = user?.role === "admin";
+      if (isAdmin) {
+        res.send({ admin: isAdmin });
+      }
+    });
+    /* ge allt User  */
+    app.get("/all-users", verifyJWT, verifyAdmin, async (req, res) => {
+      const query = {};
+      const users = await userCollection.find(query).toArray();
+      res.send(users);
     });
 
     /* Get all users ordred Products */
@@ -165,13 +175,18 @@ async function run() {
      */
 
     // send token to the user
-    app.post("/signin", async (req, res) => {
+    app.put("/signin/:email", async (req, res) => {
+      const email = req.params.email;
       const user = req.body;
+      const filter = { userEmail: email };
+      const options = { upsert: true };
+      const update = { $set: filter };
+      const result = await userCollection.updateOne(filter, update, options);
       const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "30d",
       });
 
-      res.send({ accessToken });
+      res.send({ accessToken, result });
     });
 
     /* post a new product*/
@@ -201,13 +216,12 @@ async function run() {
       const email = req.params.email;
       const data = req.body;
       const query = { userEmail: email };
-      /* const findProfile = await userProfileCollection.findOne(query);
-      if (findProfile) {
+      const findProfile = await userProfileCollection.findOne(query);
+      /*   if (findProfile) {
         const profile = await userProfileCollection.updateOne(data);
         res.send(profile);
       } else {
       } */
-
       const profile = await userProfileCollection.insertOne(data);
       res.send(profile);
     });
@@ -216,6 +230,22 @@ async function run() {
     app.post("/users-collection/:email", verifyJWT, async (req, res) => {
       const user = req.body;
       const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    /*
+     *Put:
+     */
+
+    /* update User Role: Admin */
+    app.put("/users-role/:email", verifyJWT, verifyAdmin, async (req, res) => {
+      const email = req.params.email;
+      const filter = { userEmail: email };
+      const option = { upsert: true };
+      const update = {
+        $set: { role: "admin" },
+      };
+      const result = await userCollection.updateOne(filter, update, option);
       res.send(result);
     });
 
@@ -242,7 +272,7 @@ async function run() {
 }
 
 run().catch(console.dir());
-
+a;
 app.get("/", async (req, res) => {
   res.send("Hello World");
 });
