@@ -65,6 +65,10 @@ async function run() {
     const userProfileCollection = client
       .db("sonikon_global")
       .collection("usersProfile");
+    // payment collection
+    const userPaymentCollection = client
+      .db("sonikon_global")
+      .collection("paymentCollection");
 
     /* verify Admin */
     const verifyAdmin = async (req, res, next) => {
@@ -110,7 +114,7 @@ async function run() {
       res.send(product);
     });
 
-    // get all products
+    // find products for payment
     app.get("/ordered-products-payment/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
@@ -118,7 +122,7 @@ async function run() {
       res.send(product);
     });
 
-    /* Get users Products */
+    /* Get single users Products */
     app.get("/users-ordered-products/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const order = await orderedCollection
@@ -245,6 +249,28 @@ async function run() {
         $set: { role: "admin" },
       };
       const result = await userCollection.updateOne(filter, update, option);
+      res.send(result);
+    });
+
+    /*
+     *Patch: update the product payment
+     */
+
+    app.patch("/users-ordered-products/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const { payment } = req.body;
+      console.log(payment);
+      const filter = { _id: ObjectId(id) };
+      const update = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId,
+        },
+      };
+      // insert paymet id in the payment collection
+      await userPaymentCollection.insertOne(payment);
+      // insert paymet id in the users orderd product collection
+      const result = await orderedCollection.updateOne(filter, update);
       res.send(result);
     });
 
