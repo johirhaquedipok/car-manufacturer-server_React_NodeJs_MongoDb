@@ -4,7 +4,9 @@ const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")(
+  "sk_test_51LPYHDKMsF5jlr5wVJBQLNxJw8i5TIgUG5Urq8PSdwwPT1Xpj2PJTsiJJIydOIN7QlyOyBXEL333kT7X63JDX7TW00EjRA3wqy"
+);
 // mongodb
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
@@ -64,21 +66,6 @@ async function run() {
       .db("sonikon_global")
       .collection("usersProfile");
 
-    // payment
-    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
-      const { orderedQty } = req.body;
-      if (orderedQty) {
-        const amount = parseInt(orderedQty) * 100;
-        const paymentIntent = await stripe.paymentIntents.create({
-          amount,
-          currency: "USD",
-          payment_method_types: ["card"],
-        });
-
-        res.send({ clientSecret: paymentIntent.client_secret });
-      }
-    });
-
     /* verify Admin */
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
@@ -92,6 +79,18 @@ async function run() {
         res.status(403).send({ message: "forbidden" });
       }
     };
+    // payment
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { orderedQty } = req.body;
+      const amount = orderedQty * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency: "USD",
+        payment_method_types: ["card"],
+      });
+
+      res.send({ clientSecret: paymentIntent.client_secret });
+    });
 
     /*
      * get : All get collection
@@ -272,7 +271,7 @@ async function run() {
 }
 
 run().catch(console.dir());
-a;
+
 app.get("/", async (req, res) => {
   res.send("Hello World");
 });
