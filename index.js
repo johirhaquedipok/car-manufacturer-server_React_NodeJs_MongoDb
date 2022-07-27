@@ -149,7 +149,6 @@ async function run() {
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
       const user = await userCollection.findOne({ userEmail: email });
-
       const isAdmin = user?.role === "admin";
       if (isAdmin) {
         res.send({ admin: isAdmin });
@@ -215,18 +214,20 @@ async function run() {
     });
 
     /* update or post users profile*/
-    app.put("/users-profile/:email", verifyJWT, async (req, res) => {
-      const email = req.params.email;
+    app.put("/users-profile/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
       const data = req.body;
-      const query = { userEmail: email };
-      const findProfile = await userProfileCollection.findOne(query);
-      /*   if (findProfile) {
-        const profile = await userProfileCollection.updateOne(data);
+      const filter = { _id: ObjectId(id) };
+      const findProfile = await userProfileCollection.findOne(filter);
+      if (findProfile) {
+        const profile = await userProfileCollection.updateOne(filter, {
+          $set: data,
+        });
         res.send(profile);
       } else {
-      } */
-      const profile = await userProfileCollection.insertOne(data);
-      res.send(profile);
+        const profile = await userProfileCollection.insertOne(data);
+        res.send(profile);
+      }
     });
 
     /* post a user*/
