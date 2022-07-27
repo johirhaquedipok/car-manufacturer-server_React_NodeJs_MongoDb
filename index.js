@@ -278,7 +278,7 @@ async function run() {
      * Delete : Product collection
      */
 
-    /* post a user*/
+    /* admin delete a product*/
     app.delete(
       "/delete-products-collection/:id",
       verifyJWT,
@@ -290,6 +290,13 @@ async function run() {
         res.send(result);
       }
     );
+    /* user delete a product*/
+    app.delete("/users-ordered-products/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await orderedCollection.deleteOne(query);
+      res.send(result);
+    });
 
     console.log("database connected");
   } finally {
