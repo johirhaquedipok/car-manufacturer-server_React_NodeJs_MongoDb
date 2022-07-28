@@ -137,7 +137,6 @@ async function run() {
     /* Get users profile*/
     app.get("/users-profile/:email", verifyJWT, async (req, res) => {
       const email = req?.params?.email;
-      console.log(email);
       const query = { userEmail: email };
       const profile = await userProfileCollection.findOne(query);
       res.send(profile);

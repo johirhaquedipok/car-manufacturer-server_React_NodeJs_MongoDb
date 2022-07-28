@@ -1,7 +1,7 @@
 # This Project Used Create React App
 
 Visit the `live` link [SONIKON](https://sonikon-88dc4.web.app/).
-Visit the `live` link [SONIKON-server](https://safe-falls-14581.herokuapp.com/).
+Visit the `live` link [SONIKON-server](https://sonikon.herokuapp.com).
 
 ## Available Specificaton
 
