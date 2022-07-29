@@ -147,9 +147,7 @@ async function run() {
       const email = req?.params?.email;
       const user = await userCollection.findOne({ userEmail: email });
       const isAdmin = user?.role === "admin";
-      if (isAdmin) {
-        res.send({ admin: isAdmin });
-      }
+      res.send({ admin: isAdmin });
     });
     /* ge allt User  */
     app.get("/all-users", verifyJWT, verifyAdmin, async (req, res) => {
@@ -275,6 +273,8 @@ async function run() {
           transactionId: payment.transactionId,
         },
       };
+      const result = await orderedCollection.updateOne(filter, update);
+      res.send(result);
     });
 
     // update the status shipping
